@@ -28,24 +28,6 @@ cmake --build build
 .\build\router_sim.exe data\network.csv
 ```
 
-Nếu cấu hình VS Code có CMake/Ninja, hoặc `-G "MinGW Makefiles"` bị lỗi, bỏ tùy chọn `-G` và chạy:
-
-```powershell
-cmake -S . -B build
-cmake --build build
-.\build\router_sim.exe data\network.csv
-```
-
-**Linux/macOS**:
-
-```bash
-cmake -S . -B build
-cmake --build build -j
-./build/router_sim data/network.csv
-```
-
-Lưu ý: các lệnh chạy từ **thư mục gốc dự án**, nơi chứa `CMakeLists.txt` và `data/`. Nếu gặp lỗi đổi bộ tạo CMake (generator), xóa thư mục `build` rồi cấu hình lại.
-
 **Chạy kiểm thử:**
 
 ```bash
