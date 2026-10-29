@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include_directories(include)
 
 
-file(GLOB CORE_SOURCES "src/*.cpp")
+file(GLOB_RECURSE CORE_SOURCES "src/*.cpp")
 
 
 if (CMAKE_BUILD_TYPE MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
