@@ -14,13 +14,11 @@ file(GLOB_RECURSE CORE_SOURCES "src/*.cpp")
 
 
 if (CMAKE_BUILD_TYPE MATCHES "^([Dd][Ee][Bb][Uu][Gg])$")
-    message(STATUS "Build Mode: DEBUG (Kích hoạt -Werror và AddressSanitizer)")
-    add_compile_options(
-        -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wnon-virtual-dtor -Werror -g
-    )
+    message(STATUS "Build Mode: DEBUG")
+    add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wnon-virtual-dtor -Werror -g)
 else()
-    message(STATUS "Build Mode: RELEASE (Tối ưu hiệu năng, phục vụ vấn đáp)")
-    add_compile_options(-Wall -Wextra -Wnon-virtual-dtor)
+    message(STATUS "Build Mode: RELEASE")
+    add_compile_options(-Wpedantic -Wall -Wextra -Wnon-virtual-dtor -O3 -DNDEBUG)
 endif()
 
 
