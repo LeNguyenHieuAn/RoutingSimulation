@@ -1,0 +1,205 @@
+@startuml Routing_Simulation_Class_Diagram
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam nodesep 50
+skinparam ranksep 60
+
+title Routing Simulation Class Diagram
+
+' ==================== 1. CONTROL PLANE ====================
+package "Control Plane (Routing Strategies & Factory)" {
+    interface RoutingStrategy <<interface>> {
+        + {abstract} calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+        + {abstract} getName() const : string
+        + ~RoutingStrategy() = default
+    }
+
+    class StaticRouting {
+        + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+        + getName() const : string
+    }
+
+    class ShortestPathRouting {
+        + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+        + getName() const : string
+    }
+
+    class CostBasedRouting {
+        + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+        + getName() const : string
+    }
+
+    class StrategyFactory <<Factory Pattern>> {
+        + {static} createStrategy(type : const string&) : unique_ptr<RoutingStrategy>
+    }
+
+}
+
+' ==================== 2. DATA PLANE ====================
+package "Data Plane (Core Entities & Value Types)" {
+    class Route <<Value Type>> {
+        - destIP : string
+        - nextIP : string
+        - interfaceId : string
+        - hopCount : int
+        - cost : long long
+        --
+        + Route() = default
+        + Route(destIP : string, nextIP : string, interfaceId : string, hopCount : int, cost : long long)
+        + getDestIP() const : const string&
+        + getNextIP() const : const string&
+        + getInterfaceId() const : const string&
+        + getHopCount() const : int
+        + getCost() const : long long
+        + operator==(other : const Route&) const : bool
+        + operator<(other : const Route&) const : bool
+        + {field} friend operator<<(os : ostream&, route : const Route&) : ostream&
+    }
+
+    class RoutingTable {
+        - routes : unordered_map<string, Route>
+        --
+        + addRoute(route : const Route&) : void
+        + removeRoute(destIP : const string&) : void
+        + findRoute(destIP : const string&) const : Route
+        + hasRoute(destIP : const string&) const : bool
+        + clear() noexcept : void
+    }
+
+    class Interface {
+        - id : string
+        - linkIP : string
+        - linkInterface : string
+        - isUp : bool
+        - linkCost : long long
+        - peerInterface : weak_ptr<Interface>
+        --
+        + Interface(id : string, linkIP : string, linkInterface : string, isUp : bool, linkCost : long long)
+        + getId() const : const string&
+        + getLinkIP() const : const string&
+        + getLinkInterface() const : const string&
+        + getStatus() const noexcept : bool
+        + setStatus(status : bool) noexcept : void
+        + getCost() const noexcept : long long
+        + setCost(cost : long long) : void
+        + connectPeer(peer : shared_ptr<Interface>) : void
+    }
+
+    class Packet <<Value Type>> {
+        - srcIP : string
+        - destIP : string
+        - payload : string
+        - ttl : int
+        --
+        + Packet(srcIP : string, destIP : string, payload : string, ttl : int = 64)
+        + getSrcIP() const : const string&
+        + getDestIP() const : const string&
+        + getPayload() const : const string&
+        + getTTL() const noexcept : int
+        + decrementTTL() noexcept : void
+        + isExpired() const noexcept : bool
+    }
+
+    class Router {
+        - ipAddress : string
+        - interfaces : unordered_map<string, shared_ptr<Interface>>
+        - routingTable : staticTable
+        - routingTable : dynamicTable
+        - strategy : unique_ptr<RoutingStrategy>
+        --
+        + Router(ip : string, initialStrategy : unique_ptr<RoutingStrategy> = nullptr)
+        + getIP() const : const string&
+        + addInterface(iface : shared_ptr<Interface>) : void
+        + getInterface(ifaceId : const string&) const : shared_ptr<Interface>
+        + getInterfaces() const : const unordered_map<string, shared_ptr<Interface>>&
+        + setInterfaceStatus(ifaceId : const string&, status : bool) : void
+        + getStaticRoutingTable() noexcept : RoutingTable&
+        + getStaticRoutingTable() const noexcept : const RoutingTable&
+        + getDynamicRoutingTable() noexcept : RoutingTable&
+        + getDynamicRoutingTable() const noexcept : const RoutingTable&
+        + setStrategy(newStrategy : unique_ptr<RoutingStrategy>) : void
+        + updateRoutes(topology : const unordered_map<string, shared_ptr<Router>>&) : void
+        + forwardPacket(packet : Packet&) const : string
+    }
+}
+
+' ==================== 3. EXCEPTIONS ====================
+package "Exception" {
+    class "std::runtime_error" as RuntimeError <<std>>
+
+    class NoRouteException {
+        + NoRouteException(destIP : const string&)
+    }
+
+    class InterfaceDownException {
+        + InterfaceDownException(routerIP : const string&, interfaceId : const string&)
+    }
+}
+
+' ==================== 4. ADMINISTRATOR & I/O ====================
+package "Management & Persistence I/O" {
+    class TextLogger {
+        - logFilePath : string
+        --
+        + TextLogger(filePath : string = "network_events.txt")
+        + logInfo(msg : string_view) const : void
+        + logWarning(msg : string_view) const : void
+        + logError(msg : string_view) const : void
+    }
+
+    class CsvTopologyStorage {
+        + {static} loadTopology(csvPath : const string&, routers : unordered_map<string, shared_ptr<Router>>&, logger : const TextLogger&) : void
+        + {static} saveTopology(csvPath : const string&, routers : const unordered_map<string, shared_ptr<Router>>&, logger : const TextLogger&) : void
+    }
+
+    class Administrator <<Facade>> {
+        - routers : unordered_map<string, shared_ptr<Router>>
+        - logger : TextLogger
+        --
+        + Administrator(logFile : string = "network_events.txt")
+        + importNetworkFromCsv(csvPath : const string&) : void
+        + exportNetworkToCsv(csvPath : const string&) const : void
+        + addStaticRoute(routerIP : const string&, route : const Route&) : void
+        + removeStaticRoute(routerIP : const string&, destIP : const string&) : void
+        + changeGlobalStrategy(strategyType : const string&) : void
+        + convergeNetwork() : void
+        + setLinkStatus(routerIP : const string&, ifaceId : const string&, isUp : bool) : void
+        + sendPacket(srcIP : const string&, destIP : const string&, payload : const string&, ttl : int = 16) : void
+        + printAllRoutingTables() const : void
+    }
+}
+
+' ================ RELATIONSHIPS ================
+
+RoutingStrategy <|.. StaticRouting
+RoutingStrategy <|.. ShortestPathRouting
+RoutingStrategy <|.. CostBasedRouting
+
+
+RuntimeError <|-- NoRouteException
+RuntimeError <|-- InterfaceDownException
+
+
+Administrator "1" *-- "1..*" Router : manages >
+Administrator "1" *-- "1" TextLogger : owns >
+Router "1" *-- "1" RoutingTable : owns >
+Router "1" *-- "1..*" Interface : owns >
+Router "1" *-- "1" RoutingStrategy : active strategy >
+RoutingTable "1" *-- "0..*" Route : stores >
+
+
+Interface "0..1" --> "0..1" Interface : peer (weak_ptr) >
+
+
+StrategyFactory ..> RoutingStrategy : <<creates>>
+Administrator ..> StrategyFactory : <<uses>>
+Administrator ..> CsvTopologyStorage : <<delegates CSV I/O>>
+Administrator ..> Packet : <<instantiates>>
+Router ..> Packet : <<forwards>>
+Router ..> InterfaceDownException : <<throws>>
+RoutingTable ..> NoRouteException : <<throws>>
+
+@enduml
