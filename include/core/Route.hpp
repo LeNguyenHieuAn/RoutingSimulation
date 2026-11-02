@@ -14,7 +14,6 @@ public:
     bool operator==(const Route& other) const;
     bool operator<(const Route& other) const;
     friend std::ostream& operator<<(std::ostream& os, const Route& route);
-
 private:
     std::string destIP;
     std::string nextIP;
