@@ -1,0 +1,12 @@
+/build/
+/out/
+/.vscode/
+/.idea/
+*.exe
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+*.log
+*.code-workspace
