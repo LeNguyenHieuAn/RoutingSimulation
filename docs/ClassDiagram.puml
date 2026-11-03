@@ -4,38 +4,49 @@ skinparam monochrome false
 skinparam packageStyle rectangle
 skinparam shadowing false
 skinparam roundcorner 6
-skinparam nodesep 50
-skinparam ranksep 60
+skinparam nodesep 35       
+skinparam ranksep 45       
+skinparam linetype ortho   
 
-title Routing Simulation Class Diagram
+<style>
+class {
+    Padding 2
+}
+</style>
 
-' ==================== 1. CONTROL PLANE ====================
-package "Control Plane (Routing Strategies & Factory)" {
-    interface RoutingStrategy <<interface>> {
-        + {abstract} calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
-        + {abstract} getName() const : string
-        + ~RoutingStrategy() = default
+title Routing Simulation
+
+' ==================== 1. ADMINISTRATOR & I/O ====================
+package "Management & Persistence I/O" {
+    class TextLogger {
+        - logFilePath : string
+        --
+        + TextLogger(filePath : string = "network_events.txt")
+        + logInfo(msg : string_view) const : void
+        + logWarning(msg : string_view) const : void
+        + logError(msg : string_view) const : void
     }
 
-    class StaticRouting {
-        + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
-        + getName() const : string
+    class CsvTopologyStorage {
+        + {static} loadTopology(csvPath : const string&, routers : unordered_map<string, shared_ptr<Router>>&, logger : const TextLogger&) : void
+        + {static} saveTopology(csvPath : const string&, routers : const unordered_map<string, shared_ptr<Router>>&, logger : const TextLogger&) : void
     }
 
-    class ShortestPathRouting {
-        + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
-        + getName() const : string
+    class Administrator <<Facade>> {
+        - routers : unordered_map<string, shared_ptr<Router>>
+        - logger : TextLogger
+        --
+        + Administrator(logFile : string = "network_events.txt")
+        + importNetworkFromCsv(csvPath : const string&) : void
+        + exportNetworkToCsv(csvPath : const string&) const : void
+        + addStaticRoute(routerIP : const string&, route : const Route&) : void
+        + removeStaticRoute(routerIP : const string&, destIP : const string&) : void
+        + changeGlobalStrategy(strategyType : const string&) : void
+        + convergeNetwork() : void
+        + setLinkStatus(routerIP : const string&, ifaceId : const string&, isUp : bool) : void
+        + sendPacket(srcIP : const string&, destIP : const string&, payload : const string&, ttl : int = 16) : void
+        + printAllRoutingTables() const : void
     }
-
-    class CostBasedRouting {
-        + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
-        + getName() const : string
-    }
-
-    class StrategyFactory <<Factory Pattern>> {
-        + {static} createStrategy(type : const string&) : unique_ptr<RoutingStrategy>
-    }
-
 }
 
 ' ==================== 2. DATA PLANE ====================
@@ -126,79 +137,78 @@ package "Data Plane (Core Entities & Value Types)" {
     }
 }
 
-' ==================== 3. EXCEPTIONS ====================
-package "Exception" {
-    class "std::runtime_error" as RuntimeError <<std>>
-
-    class NoRouteException {
-        + NoRouteException(destIP : const string&)
+' ==================== 3. CONTROL PLANE ====================
+package "Control Plane (Routing Strategies & Factory)" {
+    interface RoutingStrategy <<interface>> {
+        + {abstract} calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+        + {abstract} getName() const : string
+        + ~RoutingStrategy() = default
     }
 
-    class InterfaceDownException {
-        + InterfaceDownException(routerIP : const string&, interfaceId : const string&)
+    class StrategyFactory <<Factory Pattern>> {
+        + {static} createStrategy(type : const string&) : unique_ptr<RoutingStrategy>
+    }
+
+    together {
+        class StaticRouting {
+            + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+            + getName() const : string
+        }
+
+        class ShortestPathRouting {
+            + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+            + getName() const : string
+        }
+
+        class CostBasedRouting {
+            + calculateRoutes(self : Router&, topology : const unordered_map<string, shared_ptr<Router>>&) : void
+            + getName() const : string
+        }
     }
 }
 
-' ==================== 4. ADMINISTRATOR & I/O ====================
-package "Management & Persistence I/O" {
-    class TextLogger {
-        - logFilePath : string
-        --
-        + TextLogger(filePath : string = "network_events.txt")
-        + logInfo(msg : string_view) const : void
-        + logWarning(msg : string_view) const : void
-        + logError(msg : string_view) const : void
-    }
+' ==================== 4. EXCEPTIONS ====================
+package "Exception" {
+    class "std::runtime_error" as RuntimeError <<std>>
+    
+    together {
+        class NoRouteException {
+            + NoRouteException(destIP : const string&)
+        }
 
-    class CsvTopologyStorage {
-        + {static} loadTopology(csvPath : const string&, routers : unordered_map<string, shared_ptr<Router>>&, logger : const TextLogger&) : void
-        + {static} saveTopology(csvPath : const string&, routers : const unordered_map<string, shared_ptr<Router>>&, logger : const TextLogger&) : void
-    }
-
-    class Administrator <<Facade>> {
-        - routers : unordered_map<string, shared_ptr<Router>>
-        - logger : TextLogger
-        --
-        + Administrator(logFile : string = "network_events.txt")
-        + importNetworkFromCsv(csvPath : const string&) : void
-        + exportNetworkToCsv(csvPath : const string&) const : void
-        + addStaticRoute(routerIP : const string&, route : const Route&) : void
-        + removeStaticRoute(routerIP : const string&, destIP : const string&) : void
-        + changeGlobalStrategy(strategyType : const string&) : void
-        + convergeNetwork() : void
-        + setLinkStatus(routerIP : const string&, ifaceId : const string&, isUp : bool) : void
-        + sendPacket(srcIP : const string&, destIP : const string&, payload : const string&, ttl : int = 16) : void
-        + printAllRoutingTables() const : void
+        class InterfaceDownException {
+            + InterfaceDownException(routerIP : const string&, interfaceId : const string&)
+        }
     }
 }
 
 ' ================ RELATIONSHIPS ================
 
+' Inheritance
 RoutingStrategy <|.. StaticRouting
 RoutingStrategy <|.. ShortestPathRouting
 RoutingStrategy <|.. CostBasedRouting
 
-
 RuntimeError <|-- NoRouteException
 RuntimeError <|-- InterfaceDownException
 
-
+' Composition / Aggregation 
 Administrator "1" *-- "1..*" Router : manages >
-Administrator "1" *-- "1" TextLogger : owns >
-Router "1" *-- "1" RoutingTable : owns >
-Router "1" *-- "1..*" Interface : owns >
+Administrator "1" *-right- "1" TextLogger : owns >
+Router "1" *-right- "1" RoutingTable : owns >
+Router "1" *-left- "1..*" Interface : owns >
 Router "1" *-- "1" RoutingStrategy : active strategy >
 RoutingTable "1" *-- "0..*" Route : stores >
 
-
+' Association
 Interface "0..1" --> "0..1" Interface : peer (weak_ptr) >
 
-
-StrategyFactory ..> RoutingStrategy : <<creates>>
-Administrator ..> StrategyFactory : <<uses>>
-Administrator ..> CsvTopologyStorage : <<delegates CSV I/O>>
-Administrator ..> Packet : <<instantiates>>
-Router ..> Packet : <<forwards>>
+' Dependencies
+StrategyFactory .right.> RoutingStrategy : <<creates>>
+Administrator .down.> StrategyFactory : <<uses>>
+Administrator .right.> CsvTopologyStorage : <<delegates CSV I/O>>
+Administrator .down.> Packet : <<instantiates>>
+Router .right.> Packet : <<forwards>>
 Router ..> InterfaceDownException : <<throws>>
 RoutingTable ..> NoRouteException : <<throws>>
 
