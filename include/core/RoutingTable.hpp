@@ -8,6 +8,7 @@
 
 class RoutingTable {
 public:
+    const std::unordered_map<std::string, Route>& getRoutes() const;
     void addRoute(const Route& route);
     void removeRoute(const std::string& destIP);
     Route findRoute(const std::string& destIP) const;
