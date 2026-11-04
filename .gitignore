@@ -2,6 +2,7 @@
 /out/
 /.vscode/
 /.idea/
+/data/*.txt
 *.exe
 *.o
 *.obj
