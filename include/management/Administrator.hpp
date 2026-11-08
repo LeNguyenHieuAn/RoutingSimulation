@@ -12,7 +12,7 @@ private:
     std::unordered_map<std::string,std::shared_ptr<Router>>routers;
     TextLogger logger;
 public:
-    Administrator(std::string = "network_events.txt");
+    Administrator(std::string = "./data/network_events.txt");
     void importNetworkFromCsv(const std::string&);
     void exportNetworkToCsv(const std::string&);
     void addStaticRoute(const std::string&, const Route&);
