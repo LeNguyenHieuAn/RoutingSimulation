@@ -86,34 +86,48 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
         throw std::invalid_argument("Unknown source router: " + destIP);
     if (!routers.contains(destIP))
         throw std::invalid_argument("Unknown destination: " + destIP);
-    Packet packet(srcIP, destIP, payload, ttl);
-    std::string current = srcIP;
-    std::cout << "Packet path: " << current;
-    try{
-        while (current != destIP){
-            std::string nextIP = routers[current]->forwardPacket(packet);
-            if (!routers.contains(nextIP))
-                throw NoRouteException(nextIP);
-            std::cout << " -> " << nextIP;
-            current = nextIP;
+    int count = 0;
+    int maxRetries = 3;
+    bool isDeliveried = false;
+    while (!isDeliveried && count < maxRetries){
+        Packet packet(srcIP, destIP, payload, ttl);
+        std::string current = srcIP;
+        std::cout << "Packet path: " << current;
+        try{
+            while (current != destIP){
+                if (packet.getTTL() <= 0)
+                        throw std::runtime_error("TTL expired in transit");
+                std::string nextIP = routers[current]->forwardPacket(packet);
+                if (!routers.contains(nextIP))
+                    throw NoRouteException(nextIP);
+                std::cout << " -> " << nextIP;
+                current = nextIP;
+            }
+            std::cout << "\n DELIVERED | TTL=" << packet.getTTL() << '\n';
+            logger.logInfo("Packet delivered " + srcIP + " -> " + destIP + " (remaining TTL=" + std::to_string(packet.getTTL()) + ")");
+            isDeliveried = true;
         }
-        std::cout << "\n DELIVERED | TTL=" << packet.getTTL() << '\n';
-        logger.logInfo("Packet delivered " + srcIP + " -> " + destIP + " (remaining TTL=" + std::to_string(packet.getTTL()) + ")");
+        catch (const NoRouteException& msg){
+            std::cout << " | FAILED: " << msg.what() << '\n';
+            logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
+        }
+        catch (const InterfaceDownException& msg){
+            std::cout << " | FAILED: " << msg.what() << '\n';
+            std::cout << "Rerouting Topology, please wait!";
+            convergeNetwork();
+            std::cout << "Rerouting successfully, retrying send packet";
+            sendPacket(srcIP, destIP, payload, ttl);
+            logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
+        }
+        catch (const std::exception &msg){
+            std::cout << " | FAILED: " << msg.what() << '\n';
+            logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
+        }
+        count = count + 1;
     }
-    catch (const NoRouteException& msg){
-        std::cout << " | FAILED: " << msg.what() << '\n';
-        logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
-    }
-    catch (const InterfaceDownException& msg){
-        std::cout << " | FAILED: " << msg.what() << '\n';
-        std::cout << "Rerouting Topology, please wait!";
-        convergeNetwork();
-        std::cout << "Rerouting successfully";
-        logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
-    }
-    catch (const std::exception &msg){
-        std::cout << " | FAILED: " << msg.what() << '\n';
-        logger.logWarning("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
+    if (!isDeliveried){
+        std::cout << "Max retries reached. Packet dropped.\n";
+
     }
 }
 
