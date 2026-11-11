@@ -81,7 +81,7 @@ void CsvTopologyStorage::loadTopology(const std::string& csvPath, std::unordered
         countLine++;
         if (!line.empty() && line.back() == '\r')
             line.pop_back();
-        if (line.empty() || line.front() == '#')
+        if (line.empty() || line[0] == '#')
             continue;
         std::stringstream s(line);
         while (getline(s,words,',')){
