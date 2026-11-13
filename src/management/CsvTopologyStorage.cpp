@@ -39,7 +39,7 @@ namespace{
     }
 
     void addLink(std::unordered_map<std::string,std::shared_ptr<Router>>& routers, const Link_& link){
-        if (!routers.contains(link.ipA)|| !routers.contains(link.ipB))
+        if (!routers.contains(link.ipA) || !routers.contains(link.ipB))
             throw std::invalid_argument("Cannot add link, one of the routers or both of them does not exist");
         std::shared_ptr<Interface>ifaceA = std::make_shared<Interface>(link.ifaceA, link.ipB, link.ifaceB, link.isUp, link.cost);
         std::shared_ptr<Interface>ifaceB = std::make_shared<Interface>(link.ifaceB, link.ipA, link.ifaceA, link.isUp, link.cost);
@@ -81,7 +81,7 @@ void CsvTopologyStorage::loadTopology(const std::string& csvPath, std::unordered
         countLine++;
         if (!line.empty() && line.back() == '\r')
             line.pop_back();
-        if (line.empty() || line.front() == '#')
+        if (line.empty() || line[0] == '#')
             continue;
         std::stringstream s(line);
         while (getline(s,words,',')){
