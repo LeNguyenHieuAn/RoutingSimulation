@@ -96,7 +96,7 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
         try{
             while (current != destIP){
                 if (packet.getTTL() <= 0)
-                        throw std::runtime_error("TTL expired in transit");
+                    throw std::runtime_error("TTL expired in transit");
                 std::string nextIP = routers[current]->forwardPacket(packet);
                 if (!routers.contains(nextIP))
                     throw NoRouteException(nextIP);
