@@ -11,7 +11,7 @@
 namespace {
     void printTable(const std::unordered_map<std::string, Route>& routes) {
         if (routes.empty()) {
-            std::cout << "      (Bảng định tuyến rỗng)\n";
+            std::cout << "      (Routing table empty)\n";
             return;
         }
         std::cout << "      " << std::left
@@ -134,12 +134,12 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
 void Administrator::printAllRoutingTables() const {
     if (routers.empty()) {
         logger.logInfo("Requested to print routing tables, but network is empty.");
-        std::cout << "\n[!] Mạng hiện tại chưa có Router nào.\n";
+        std::cout << "\n[!] Topology does not have any router.\n";
         return;
     }
     std::cout << "\n========================================================================\n";
-    std::cout << "                   BẢNG ĐỊNH TUYẾN TOÀN MẠNG (GLOBAL ROUTING)           \n";
-    std::cout << "========================================================================\n";
+    std::cout << "                         ROUTING BOARD                                    \n";
+    std::cout << "==========================================================================\n";
     for (const auto& [ip, router] : routers) {
         if (!router)
             continue;
@@ -147,7 +147,7 @@ void Administrator::printAllRoutingTables() const {
         std::cout << "  > Static Routing Table:\n";
         const auto& staticRoutes = router->getStaticRoutingTable().getRoutes();
         printTable(staticRoutes);
-        std::cout << "  > Dynamic Routing Table (Calculated by Strategy):\n";
+        std::cout << "  > Dynamic Routing Table (Calculated by Routing Strategy):\n";
         const auto& dynamicRoutes = router->getDynamicRoutingTable().getRoutes();
         printTable(dynamicRoutes);
     }
