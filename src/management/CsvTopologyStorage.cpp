@@ -66,6 +66,7 @@ namespace{
 }
 
 void CsvTopologyStorage::loadTopology(const std::string& csvPath, std::unordered_map<std::string,std::shared_ptr<Router>>& routers,const TextLogger& logger){
+    routers.clear();
     std::ifstream fIn(csvPath,std::ios::in);
     if (!fIn.is_open())
         throw std::runtime_error("Cannot open csv file");
@@ -91,27 +92,40 @@ void CsvTopologyStorage::loadTopology(const std::string& csvPath, std::unordered
             continue;
         try{
             if (row.at(0) == "ROUTER"){
-                if (row.size() == 2)
+                if (row.size() == 2){
                         routers_.emplace_back(Router_{row.at(1)});
-                else
+                }
+                else{
                     throw std::invalid_argument("Has wrong number of fields for ROUTER");
+                }
             }
-            else
+            else{
                 if (row.at(0) == "LINK"){
-                    if (row.size() == 7)
-                      links_.emplace_back(Link_{row.at(1),row.at(2),row.at(3),row.at(4),std::stoll(row.at(5)),row.at(6) == "UP"});
-                    else
+                    if (row.size() == 7){
+                        if (row.at(6) == "UP" || row.at(6) == "DOWN"){
+                            links_.emplace_back(Link_{row.at(1),row.at(2),row.at(3),row.at(4),std::stoll(row.at(5)),row.at(6) == "UP"});
+                        }
+                        else{
+                            throw std::invalid_argument("Invalid link status: " + row.at(6));
+                        }
+                    }
+                    else{
                         throw std::invalid_argument("Has wrong number of fields for LINK");
+                    }
                 }
                 else
                     if (row.at(0) == "STATIC"){
-                        if (row.size() == 7)
+                        if (row.size() == 7){
                             routes_.emplace_back(StaticRoute_{row.at(1),row.at(2),row.at(3),row.at(4),std::stoi(row.at(5)),std::stoll(row.at(6))});
-                        else
+                        }
+                        else{
                             throw std::invalid_argument("Has wrong number of fields for STATIC");
+                        }
                     }
-                    else
+                    else{
                         throw std::invalid_argument("Has unknown type: " + row.at(0));
+                    }
+                }
         }
         catch (std::exception &msg){
             logger.logWarning("Line " + std::to_string(countLine) + " format error: " + msg.what());

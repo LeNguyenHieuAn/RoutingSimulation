@@ -11,7 +11,7 @@
 namespace {
     void printTable(const std::unordered_map<std::string, Route>& routes) {
         if (routes.empty()) {
-            std::cout << "      (Bảng định tuyến rỗng)\n";
+            std::cout << "      (Routing table empty)\n";
             return;
         }
         std::cout << "      " << std::left
@@ -46,10 +46,15 @@ void Administrator::exportNetworkToCsv(const std::string& csvPath){
 }
 
 void Administrator::addStaticRoute(const std::string& routerIP, const Route& route){
-    if (!routers.contains(routerIP))
+if (!routers.contains(routerIP))
         throw std::invalid_argument("Router IP is not found");
-    auto& staticTable = routers[routerIP]->getStaticRoutingTable();
-    staticTable.addRoute(route);
+    if (!routers.contains(route.getDestIP()))
+        throw std::invalid_argument("Dest IP is not found");
+    if (!route.getNextIP().empty() && !routers.contains(route.getNextIP()))
+        throw std::invalid_argument("Next IP is not found");
+    if (!routers[routerIP]->getInterfaces().contains(route.getInterfaceId()))
+        throw std::invalid_argument("Interface ID is not found");
+    routers[routerIP]->getStaticRoutingTable().addRoute(route);
 }
 
 void Administrator::removeStaticRoute(const std::string& routerIP, const std::string& destIP){
@@ -78,12 +83,15 @@ void Administrator::setLinkStatus(const std::string& routerIP, const std::string
     if (!routers.contains(routerIP))
         throw std::invalid_argument("Router IP is not found");
     const auto iface = routers[routerIP]->getInterface(ifaceId);
-    iface->setStatus(isUP);
+    if (iface != nullptr)
+        iface->setStatus(isUP);
+    else
+        throw std::invalid_argument("Interface is not found");
 }
 
 void Administrator::sendPacket(const std::string& srcIP, const std::string& destIP, const std::string& payload, int ttl){
     if (!routers.contains(srcIP))
-        throw std::invalid_argument("Unknown source router: " + destIP);
+        throw std::invalid_argument("Unknown source router: " + srcIP);
     if (!routers.contains(destIP))
         throw std::invalid_argument("Unknown destination: " + destIP);
     int count = 0;
@@ -114,9 +122,6 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
         catch (const InterfaceDownException& msg){
             std::cout << " | FAILED: " << msg.what() << '\n';
             std::cout << "Rerouting Topology, please wait!";
-            convergeNetwork();
-            std::cout << "Rerouting successfully, retrying send packet";
-            sendPacket(srcIP, destIP, payload, ttl);
             logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
         }
         catch (const std::exception &msg){
@@ -134,12 +139,12 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
 void Administrator::printAllRoutingTables() const {
     if (routers.empty()) {
         logger.logInfo("Requested to print routing tables, but network is empty.");
-        std::cout << "\n[!] Mạng hiện tại chưa có Router nào.\n";
+        std::cout << "\n[!] Topology does not have any router.\n";
         return;
     }
     std::cout << "\n========================================================================\n";
-    std::cout << "                   BẢNG ĐỊNH TUYẾN TOÀN MẠNG (GLOBAL ROUTING)           \n";
-    std::cout << "========================================================================\n";
+    std::cout << "                         ROUTING BOARD                                    \n";
+    std::cout << "==========================================================================\n";
     for (const auto& [ip, router] : routers) {
         if (!router)
             continue;
@@ -147,7 +152,7 @@ void Administrator::printAllRoutingTables() const {
         std::cout << "  > Static Routing Table:\n";
         const auto& staticRoutes = router->getStaticRoutingTable().getRoutes();
         printTable(staticRoutes);
-        std::cout << "  > Dynamic Routing Table (Calculated by Strategy):\n";
+        std::cout << "  > Dynamic Routing Table (Calculated by Routing Strategy):\n";
         const auto& dynamicRoutes = router->getDynamicRoutingTable().getRoutes();
         printTable(dynamicRoutes);
     }
