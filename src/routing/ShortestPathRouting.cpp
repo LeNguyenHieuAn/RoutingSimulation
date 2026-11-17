@@ -77,7 +77,7 @@ void ShortestPathRouting::calculateRoutes(Router& self, const Topology& topology
             if (current.hops == INT_MAX) {
                 throw std::overflow_error("BFS hop count overflow");
             }
-            PathInfo candidate{current.cost + 1, current.hops + 1,
+            PathInfo candidate{current.cost + edge.cost, current.hops + 1,
                 u == source ? edge.neighborIP : current.nextIP,
                 u == source ? edge.localInterface : current.interfaceId
             };

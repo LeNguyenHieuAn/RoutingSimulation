@@ -86,7 +86,7 @@ void CostBasedRouting::calculateRoutes(Router& self, const Topology& topology) {
             continue;
         const auto current = currentIt->second;
         for (const auto& edge : activeNeighbors(*routerIt->second, topology)) {
-            if (edge.cost <= 0) {
+            if (edge.cost < 0) {
                 throw std::invalid_argument("Dijkstra requires positive link costs");
             }
             if (current.cost > LLONG_MAX - edge.cost || current.hops == INT_MAX) {
