@@ -128,6 +128,10 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
             std::cout << " | FAILED: " << msg.what() << '\n';
             logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
         }
+        catch (...){
+            std::cout << " | FAILED: Unknown error\n";
+            logger.logError("Packet failed " + srcIP + " -> " + destIP + ": Unknown error");
+        }
         count = count + 1;
     }
     if (!isDeliveried){
