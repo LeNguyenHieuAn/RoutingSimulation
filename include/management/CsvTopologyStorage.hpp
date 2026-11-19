@@ -7,6 +7,7 @@
 
 class CsvTopologyStorage{
 public:
+    CsvTopologyStorage() = delete;
     static void loadTopology(const std::string&, std::unordered_map<std::string,std::shared_ptr<Router>>&, const TextLogger&);
     static void saveTopology(const std::string&, const std::unordered_map<std::string,std::shared_ptr<Router>>&, const TextLogger&);
 };
