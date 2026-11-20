@@ -1,6 +1,5 @@
 #include "management/Administrator.hpp"
 #include <iostream>
-#include <iomanip>
 #include <stdexcept>
 #include <string>
 #include <limits>
@@ -79,7 +78,7 @@ int main() {
     Administrator admin;
     try{
         admin.importNetworkFromCsv("./data/network_topology.csv");
-        admin.changeGlobalStrategy("cost");
+        admin.changeGlobalStrategy("dijkstra");
         std::cout << "Network topology imported successfully.\n";
     } catch (const std::exception& msg) {
         std::cerr << "Error importing network topology: " << msg.what() << std::endl;
@@ -140,12 +139,14 @@ int main() {
                     {
                         auto filePath = Ask::askString("Enter CSV file path to import: ");
                         admin.importNetworkFromCsv("./data/" + filePath);
+                        std::cout << "Network topology imported successfully.\n";
                         break;
                     }
                 case 7:
                     {
                         auto filePath = Ask::askString("Enter CSV file path to export: ");
                         admin.exportNetworkToCsv("./data/" + filePath);
+                        std::cout << "Network topology exported successfully.\n";
                         break;
                     }
                 case 8:
@@ -157,6 +158,7 @@ int main() {
                     {
                         auto strategy = Ask::askString("Enter new global routing strategy (bfs/dijkstra/static): ");
                         admin.changeGlobalStrategy(strategy);
+                        std::cout << "Global routing strategy changed successfully.\n";
                         break;
                     }
                 default:

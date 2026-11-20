@@ -38,6 +38,7 @@ Administrator::Administrator(std::string logFile) : logger(std::move(logFile)) {
 
 void Administrator::importNetworkFromCsv(const std::string& csvPath){
     CsvTopologyStorage::loadTopology(csvPath, routers, logger);
+    changeGlobalStrategy("dijkstra");
     convergeNetwork();
 }
 
@@ -50,7 +51,7 @@ if (!routers.contains(routerIP))
         throw std::invalid_argument("Router IP is not found");
     if (!routers.contains(route.getDestIP()))
         throw std::invalid_argument("Dest IP is not found");
-    if (!route.getNextIP().empty() && !routers.contains(route.getNextIP()))
+    if (route.getNextIP().empty() || !routers.contains(route.getNextIP()))
         throw std::invalid_argument("Next IP is not found");
     if (!routers[routerIP]->getInterfaces().contains(route.getInterfaceId()))
         throw std::invalid_argument("Interface ID is not found");
@@ -84,7 +85,7 @@ void Administrator::setLinkStatus(const std::string& routerIP, const std::string
         throw std::invalid_argument("Router IP is not found");
     const auto iface = routers[routerIP]->getInterface(ifaceId);
     if (iface != nullptr)
-        iface->setStatus(isUP);
+        routers[routerIP]->setInterfaceStatus(ifaceId, isUP);
     else
         throw std::invalid_argument("Interface is not found");
 }
@@ -122,6 +123,7 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
         catch (const InterfaceDownException& msg){
             std::cout << " | FAILED: " << msg.what() << '\n';
             std::cout << "Rerouting Topology, please wait!";
+            convergeNetwork();
             logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
         }
         catch (const std::exception &msg){

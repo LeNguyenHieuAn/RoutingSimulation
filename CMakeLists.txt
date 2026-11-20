@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 file(GLOB_RECURSE CORE_SOURCES "src/*.cpp")
+list(REMOVE_ITEM CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 file(GLOB_RECURSE CORE_HEADERS "include/*.hpp")
 
 

@@ -66,10 +66,10 @@ namespace{
 }
 
 void CsvTopologyStorage::loadTopology(const std::string& csvPath, std::unordered_map<std::string,std::shared_ptr<Router>>& routers,const TextLogger& logger){
-    routers.clear();
     std::ifstream fIn(csvPath,std::ios::in);
     if (!fIn.is_open())
         throw std::runtime_error("Cannot open csv file");
+    routers.clear();
     logger.logInfo("Loading Topology from CSV file");
     std::vector<std::string>row;
     std::vector<Router_>routers_;
