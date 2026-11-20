@@ -62,7 +62,7 @@ namespace Ask{
 }
 
 void menu(){
-    std::cout << "\n==================== ROUTING SIMULATOR ====================\n"
+    std::cout << "\n==================== ROUTING SIMULATION ====================\n"
                  "1. Print all routing tables\n"
                  "2. Send packet\n"
                  "3. Turn on/off interface\n"
@@ -71,6 +71,7 @@ void menu(){
                  "6. Import network topology from CSV\n"
                  "7. Export network topology to CSV\n"
                  "8. Converge network\n"
+                 "9. Change global routing strategy\n"
                  "0. Exit\n";
 }
 
@@ -88,7 +89,7 @@ int main() {
     while (true){
         try{
             menu();
-            int choice = Ask::askInt("Enter your choice: ", 0, 8);
+            int choice = Ask::askInt("Enter your choice: ", 0, 9);
             if (choice == 0) {
                 std::cout << "Exiting the program.\n";
                 break;
@@ -104,7 +105,7 @@ int main() {
                         auto src = Ask::askString("Enter source router: ");
                         auto dest = Ask::askString("Enter destination router: ");
                         auto payload = Ask::askString("Enter packet payload: ");
-                        auto ttl = Ask::askLongLong("Enter packet TTL: ", 1, std::numeric_limits<long long>::max());
+                        auto ttl = Ask::askInt("Enter packet TTL: ", 1, std::numeric_limits<int>::max());
                         admin.sendPacket(src, dest, payload, ttl);
                         break;
                     }
@@ -114,6 +115,7 @@ int main() {
                         auto interfaceName = Ask::askString("Enter interface name: ");
                         bool status = Ask::askInt("Enter status (1 for UP, 0 for DOWN): ", 0, 1);
                         admin.setLinkStatus(routerName, interfaceName, status);
+                        break;
                     }
                 case 4:
                     {
@@ -149,6 +151,12 @@ int main() {
                 case 8:
                     {
                         admin.convergeNetwork();
+                        break;
+                    }
+                case 9:
+                    {
+                        auto strategy = Ask::askString("Enter new global routing strategy (bfs/dijkstra/static): ");
+                        admin.changeGlobalStrategy(strategy);
                         break;
                     }
                 default:
