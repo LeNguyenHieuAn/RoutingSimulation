@@ -25,7 +25,7 @@ endif()
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
     add_executable(RoutingSimulation src/main.cpp ${CORE_SOURCES} ${CORE_HEADERS})
-    target_include_directories(app PRIVATE 
+    target_include_directories(RoutingSimulation PRIVATE 
         include
         include/management
         include/routing
