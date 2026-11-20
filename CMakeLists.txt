@@ -7,6 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 file(GLOB_RECURSE CORE_SOURCES "src/*.cpp")
+list(REMOVE_ITEM CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 file(GLOB_RECURSE CORE_HEADERS "include/*.hpp")
 
 
@@ -23,9 +24,9 @@ else()
 endif()
 
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
-    add_executable(app main.cpp ${CORE_SOURCES} ${CORE_HEADERS})
-    target_include_directories(app PRIVATE 
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+    add_executable(RoutingSimulation src/main.cpp ${CORE_SOURCES} ${CORE_HEADERS})
+    target_include_directories(RoutingSimulation PRIVATE 
         include
         include/management
         include/routing
