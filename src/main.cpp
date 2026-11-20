@@ -114,6 +114,7 @@ int main() {
                         auto interfaceName = Ask::askString("Enter interface name: ");
                         bool status = Ask::askInt("Enter status (1 for UP, 0 for DOWN): ", 0, 1);
                         admin.setLinkStatus(routerName, interfaceName, status);
+                        std::cout << "Interface status updated successfully.\n";
                         break;
                     }
                 case 4:
@@ -126,6 +127,7 @@ int main() {
                         long long cost = Ask::askLongLong("Enter cost: ", 1, std::numeric_limits<long long>::max());
                         Route route(destIP, nextIP, interfaceId, hopCount, cost);
                         admin.addStaticRoute(routerName, route);
+                        std::cout << "Static route added successfully.\n";
                         break;
                     }
                 case 5:
@@ -133,18 +135,19 @@ int main() {
                         auto routerName = Ask::askString("Enter router name: ");
                         auto destIP = Ask::askString("Enter destination network to remove: ");
                         admin.removeStaticRoute(routerName, destIP);
+                        std::cout << "Static route removed successfully.\n";
                         break;
                     }
                 case 6:
                     {
-                        auto filePath = Ask::askString("Enter CSV file path to import: ");
+                        auto filePath = Ask::askString("Enter CSV file name to import: ");
                         admin.importNetworkFromCsv("./data/" + filePath);
                         std::cout << "Network topology imported successfully.\n";
                         break;
                     }
                 case 7:
                     {
-                        auto filePath = Ask::askString("Enter CSV file path to export: ");
+                        auto filePath = Ask::askString("Enter CSV file name to export: ");
                         admin.exportNetworkToCsv("./data/" + filePath);
                         std::cout << "Network topology exported successfully.\n";
                         break;
@@ -152,6 +155,7 @@ int main() {
                 case 8:
                     {
                         admin.convergeNetwork();
+                        std::cout << "Network convergence completed successfully.\n";
                         break;
                     }
                 case 9:

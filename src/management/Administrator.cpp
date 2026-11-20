@@ -39,7 +39,6 @@ Administrator::Administrator(std::string logFile) : logger(std::move(logFile)) {
 void Administrator::importNetworkFromCsv(const std::string& csvPath){
     CsvTopologyStorage::loadTopology(csvPath, routers, logger);
     changeGlobalStrategy("dijkstra");
-    convergeNetwork();
 }
 
 void Administrator::exportNetworkToCsv(const std::string& csvPath){
@@ -122,7 +121,7 @@ void Administrator::sendPacket(const std::string& srcIP, const std::string& dest
         }
         catch (const InterfaceDownException& msg){
             std::cout << " | FAILED: " << msg.what() << '\n';
-            std::cout << "Rerouting Topology, please wait!";
+            std::cout << "Rerouting Topology, please wait!\n";
             convergeNetwork();
             logger.logError("Packet failed " + srcIP + " -> " + destIP + ": " + msg.what());
         }
