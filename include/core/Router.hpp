@@ -12,22 +12,22 @@
 class Router {
 public:
     explicit Router(std::string ip, std::unique_ptr<RoutingStrategy> initialStrategy = nullptr);
-    const std::string& getIP() const;
+    const std::string& getIP() const noexcept;
     void addInterface(std::shared_ptr<Interface> iface);
     std::shared_ptr<Interface> getInterface(const std::string& ifaceId) const;
-    const std::unordered_map<std::string, std::shared_ptr<Interface>>& getInterfaces() const;
+    const std::unordered_map<std::string, std::shared_ptr<Interface>>& getInterfaces() const noexcept;
     void setInterfaceStatus(const std::string& ifaceId, bool status);
     RoutingTable& getStaticRoutingTable() noexcept;
     const RoutingTable& getStaticRoutingTable() const noexcept;
     RoutingTable& getDynamicRoutingTable() noexcept;
     const RoutingTable& getDynamicRoutingTable() const noexcept;
-    void setStrategy(std::unique_ptr<RoutingStrategy> newStrategy);
+    void setStrategy(std::unique_ptr<RoutingStrategy> newStrategy) noexcept;
     void updateRoutes(const std::unordered_map<std::string, std::shared_ptr<Router>>& topology);
     std::string forwardPacket(Packet& packet) const;
 private:
-    std::string ipAddress;
-    std::unordered_map<std::string, std::shared_ptr<Interface>> interfaces;
-    RoutingTable staticTable;
-    RoutingTable dynamicTable;
-    std::unique_ptr<RoutingStrategy> strategy;
+    std::string ipAddress{};
+    std::unordered_map<std::string, std::shared_ptr<Interface>> interfaces{};
+    RoutingTable staticTable{};
+    RoutingTable dynamicTable{};
+    std::unique_ptr<RoutingStrategy> strategy{nullptr};
 };
